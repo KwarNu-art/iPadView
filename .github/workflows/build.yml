@@ -1,4 +1,4 @@
-name: Build Universal iPadView dylib
+name: Build iPadView dylib
 on:
   push:
     branches: [ "main" ]
@@ -9,14 +9,16 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-      - name: Compile iPadView.dylib
+      - name: Compile dylib
         run: |
-          clang -dynamiclib -arch arm64 -arch arm64e \
+          SOURCE_FILE=$(ls .m | head -n 1)
+          echo "Found source file: $SOURCE_FILE"
+          clang -dynamiclib -arch arm64 \
             -isysroot $(xcrun --sdk iphoneos --show-sdk-path) \
             -miphoneos-version-min=12.0 \
             -framework Foundation -framework UIKit \
-            -O3 -flto \
-            iPadView.m -o iPadView.dylib
+            -O3 \
+            "$SOURCE_FILE" -o iPadView.dylib
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
