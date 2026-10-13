@@ -1,26 +1,37 @@
-name: Build iPadView dylib
+name: Build iOS Dylibs
 on:
   push:
     branches: [ "main" ]
   workflow_dispatch:
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: macos-14
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-      - name: Compile dylib
+      - name: Compile IOS18Spoof.dylib
         run: |
-          SOURCE_FILE=$(ls .m | head -n 1)
-          echo "Found source file: $SOURCE_FILE"
-          clang -dynamiclib -arch arm64 \
-            -isysroot $(xcrun --sdk iphoneos --show-sdk-path) \
-            -miphoneos-version-min=12.0 \
-            -framework Foundation -framework UIKit \
-            -O3 \
-            "$SOURCE_FILE" -o iPadView.dylib
-      - name: Upload Artifact
+          if [ -f "IOS18Spoof.m" ]; then
+            xcrun -sdk iphoneos clang -dynamiclib -arch arm64 \
+              -isysroot $(xcrun --sdk iphoneos --show-sdk-path) \
+              -miphoneos-version-min=14.0 \
+              -framework Foundation -framework UIKit -lobjc \
+              IOS18Spoof.m -o IOS18Spoof.dylib
+            codesign -s - IOS18Spoof.dylib
+          fi
+      - name: Compile iPadView.dylib
+        run: |
+          if [ -f "iPadView.m" ]; then
+            xcrun -sdk iphoneos clang -dynamiclib -arch arm64 \
+              -isysroot $(xcrun --sdk iphoneos --show-sdk-path) \
+              -miphoneos-version-min=14.0 \
+              -framework Foundation -framework UIKit -lobjc \
+              iPadView.m -o iPadView.dylib
+            codesign -s - iPadView.dylib
+          fi
+      - name: Upload Dylib Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: iPadView-dylib
-          path: iPadView.dylib
+          name: iOS-Dylibs
+          path: |
+            .dylib
