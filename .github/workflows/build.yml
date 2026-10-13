@@ -1,0 +1,24 @@
+name: Build Universal iPadView dylib
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      - name: Compile iPadView.dylib
+        run: |
+          clang -dynamiclib -arch arm64 -arch arm64e \
+            -isysroot $(xcrun --sdk iphoneos --show-sdk-path) \
+            -miphoneos-version-min=12.0 \
+            -framework Foundation -framework UIKit \
+            -O3 -flto \
+            iPadView.m -o iPadView.dylib
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: iPadView-dylib
+          path: iPadView.dylib
